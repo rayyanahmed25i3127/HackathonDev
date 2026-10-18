@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   MessageSquare,
   Send,
@@ -30,6 +30,8 @@ import {
   Download,
 } from 'lucide-react';
 import { useDemo } from './demo-provider';
+import { supabase } from '@/lib/supabase/browser';
+import Link from 'next/link';
 import {
   Avatar,
   Badge,
@@ -506,7 +508,7 @@ export function CalendarPage({
         <CalendarDays size={17} />
         <p>
           Google Calendar is not connected. Calendar availability and appointments shown are local
-          records are not synchronized. Connect Google Calendar to create real events.
+          records are not synchronized. <Link href="/integrations">Connect Google Calendar</Link> to create real events.
         </p>
       </div>
       <Panel title="Appointment details" description="Keep every customer commitment in sight.">
@@ -663,6 +665,32 @@ export function IntegrationsPage() {
   const { notify, can } = useDemo();
   const [provider, setProvider] = useState<string | null>(null);
   const p = providers.find((p) => p.id === provider);
+  useEffect(() => {
+    const result = new URLSearchParams(window.location.search).get('google');
+    if (result === 'connected') notify('Google Calendar connected successfully.', 'success');
+    if (result === 'error') notify('Google Calendar connection failed. Please try again.', 'error');
+  }, [notify]);
+  const connectGoogle = async () => {
+    try {
+      const { data: auth } = await supabase.auth.getSession();
+      if (!auth.session) {
+        notify('Sign in before connecting Google Calendar.', 'error');
+        return;
+      }
+      const response = await fetch('/api/integrations/google/start', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${auth.session.access_token}` },
+      });
+      const result = await response.json().catch(() => null);
+      if (!response.ok || typeof result?.authorizationUrl !== 'string') {
+        notify(response.status === 403 ? 'Only a workspace Owner or Admin can connect Google Calendar.' : 'Unable to start Google Calendar authorization.', 'error');
+        return;
+      }
+      window.location.assign(result.authorizationUrl);
+    } catch {
+      notify('Unable to start Google Calendar authorization.', 'error');
+    }
+  };
   return (
     <>
       <PageHeading
@@ -734,9 +762,19 @@ export function IntegrationsPage() {
           if (!v) setProvider(null);
         }}
         title={p ? `Connect ${p.name}` : 'Connect provider'}
-        description="Backend integration placeholder. Never enter API keys in this frontend."
+        description={p?.id === 'google' ? 'Connect securely with Google OAuth. Credentials stay on the server.' : 'Backend integration placeholder. Never enter API keys in this frontend.'}
       >
-        <div className="form-body">
+        {p?.id === 'google' ? (
+          <div className="form-body">
+            <div className="integration-hint">
+              <LockKeyhole size={17} />
+              <p>Google will ask you to approve Calendar access. No Google credentials or refresh tokens are entered in this app.</p>
+            </div>
+            <h3>Connect Google Calendar</h3>
+            <p className="muted">You must be signed in as a workspace Owner or Admin. The server will protect the OAuth state and store tokens securely.</p>
+          </div>
+        ) : (
+          <div className="form-body">
           <div className="integration-hint">
             <LockKeyhole size={17} />
             <p>
@@ -750,21 +788,22 @@ export function IntegrationsPage() {
             <code className="endpoint">{p?.endpoint}</code>
           </Field>
           <p className="muted">{p?.limit}</p>
-        </div>
+          </div>
+        )}
         <div className="dialog-footer">
           <Button variant="secondary" onClick={() => setProvider(null)}>
             Close
           </Button>
           <Button
             onClick={() =>
-              notify(
+              p?.id === 'google' ? connectGoogle() : notify(
                 'Backend connection is pending. No credentials were submitted and no provider was connected.',
                 'info',
               )
             }
           >
-            Check connection
-            <RefreshCw size={14} />
+            {p?.id === 'google' ? 'Connect Google Calendar' : 'Check connection'}
+            {p?.id === 'google' ? <ArrowUpRight size={14} /> : <RefreshCw size={14} />}
           </Button>
         </div>
       </Dialog>
@@ -791,11 +830,44 @@ export function ServiceAction({
     const l = data.leads.find((l) => l.id === leadId);
     if (!l) return;
     if (isPayment) {
-      notify(
-        'Stripe is not connected. No checkout link was created or sent. Your backend will create a hosted payment request.',
-        'info',
-      );
-      onClose();
+      const amountPkr = Number(form.get('amount'));
+      const amountPaisa = Math.round(amountPkr * 100);
+      if (!Number.isFinite(amountPkr) || amountPkr < 1 || amountPkr > 1_000_000 || !Number.isSafeInteger(amountPaisa)) {
+        setError('Enter a valid amount between PKR 1 and PKR 1,000,000.');
+        return;
+      }
+      const { data: authData } = await supabase.auth.getSession();
+      const session = authData.session;
+      if (!session) {
+        setError('Please sign in before starting a Safepay checkout.');
+        return;
+      }
+      setBusy(true);
+      try {
+        const response = await fetch('/api/v1/payments/checkout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ amountPaisa, leadId }),
+        });
+        const result = (await response.json().catch(() => ({}))) as {
+          checkoutUrl?: string;
+          message?: string;
+        };
+        if (!response.ok || !result.checkoutUrl) {
+          throw new Error(result.message || 'Unable to create the Safepay checkout.');
+        }
+        const checkoutUrl = new URL(result.checkoutUrl);
+        if (checkoutUrl.protocol !== 'https:' && checkoutUrl.hostname !== 'localhost') {
+          throw new Error('Safepay returned an invalid checkout URL.');
+        }
+        window.location.assign(checkoutUrl.toString());
+      } catch (err) {
+        setBusy(false);
+        setError(err instanceof Error ? err.message : 'Unable to create the Safepay checkout.');
+      }
       return;
     }
     const ownerId = String(form.get('ownerId')),
@@ -874,14 +946,14 @@ export function ServiceAction({
       }}
       title={
         isPayment
-          ? 'Request a payment'
+          ? 'Pay with Safepay (Sandbox)'
           : existing
             ? 'Reschedule appointment'
             : 'Make the next connection.'
       }
       description={
         isPayment
-          ? 'Set the amount and customer. Stripe creates the real checkout link.'
+          ? 'Set the amount in PKR. Safepay will open a sandbox checkout in a new page.'
           : 'Booking · checks conflicts against scheduled appointments.'
       }
     >
@@ -908,18 +980,13 @@ export function ServiceAction({
                     type="number"
                     name="amount"
                     required
-                    min="0.5"
+                    min="1"
                     step="0.01"
                     placeholder="0.00"
                   />
                 </Field>
                 <Field label="Currency">
-                  <select name="currency">
-                    <option>USD</option>
-                    <option>PKR</option>
-                    <option>GBP</option>
-                    <option>EUR</option>
-                  </select>
+                  <input value="PKR" readOnly aria-label="Currency" />
                 </Field>
               </div>
               <Field label="Description">
@@ -928,8 +995,7 @@ export function ServiceAction({
               <div className="integration-hint">
                 <Wallet size={17} />
                 <p>
-                  Backend placeholder. No payment link is generated until Stripe is connected. All
-                  card entry happens on Stripe’s hosted page.
+                  Sandbox only. Safepay hosts the checkout and this CRM never receives card details.
                 </p>
               </div>
             </>
@@ -1002,7 +1068,7 @@ export function ServiceAction({
             {busy
               ? 'Saving…'
               : isPayment
-                ? 'Create checkout link'
+                ? 'Pay with Safepay (Sandbox)'
                 : existing
                   ? 'Save new time'
                   : 'Save appointment'}

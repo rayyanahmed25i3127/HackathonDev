@@ -138,6 +138,8 @@ function Loading() {
 }
 function WorkspaceInner() {
   const pathname = usePathname();
+  // Normalize the catch-all route so a trailing slash cannot select a stale screen.
+  const routePath = pathname.replace(/\/+$/, '') || '/';
   const router = useRouter();
   const { data, setData, ready, toast, select, notify, visibleLeads, can } = useDemo();
   const [mobile, setMobile] = useState(false);
@@ -151,7 +153,7 @@ function WorkspaceInner() {
     null,
   );
   const recovery = getRecovery(visibleLeads, data.rules.idleHours);
-  const current = navigation.flatMap((g) => g.items).find((i) => i.href === pathname);
+  const current = navigation.flatMap((g) => g.items).find((i) => i.href === routePath);
   const title = current?.label || 'Workspace';
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -167,11 +169,11 @@ function WorkspaceInner() {
     setMobile(false);
   }, [pathname]);
   if (!ready) return <Loading />;
-  if (pathname === '/login' || pathname === '/signup' || pathname === '/forgot-password')
-    return <AuthScreen mode={pathname.slice(1)} />;
-  if (pathname === '/capture') return <CaptureScreen />;
+  if (routePath === '/login' || routePath === '/signup' || routePath === '/forgot-password')
+    return <AuthScreen mode={routePath.slice(1)} />;
+  if (routePath === '/capture') return <CaptureScreen />;
   const kind =
-    pathname === '/contacts' ? 'contact' : pathname === '/pipeline' ? 'opportunity' : 'lead';
+    routePath === '/contacts' ? 'contact' : routePath === '/pipeline' ? 'opportunity' : 'lead';
   return (
     <div className="app-shell">
       {mobile && (
@@ -211,8 +213,8 @@ function WorkspaceInner() {
                   <Link
                     href={i.href}
                     key={i.href}
-                    className={`nav-item ${pathname === i.href ? 'active' : ''}`}
-                    aria-current={pathname === i.href ? 'page' : undefined}
+                    className={`nav-item ${routePath === i.href ? 'active' : ''}`}
+                    aria-current={routePath === i.href ? 'page' : undefined}
                   >
                     <i.icon size={17} strokeWidth={1.7} />
                     <span>{i.label}</span>
@@ -290,40 +292,40 @@ function WorkspaceInner() {
         <main className="main-content" id="main-content">
           <AnimatePresence mode="wait">
             <motion.div
-              key={pathname}
+              key={routePath}
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.18 }}
             >
-              {pathname === '/' ? (
+              {routePath === '/' ? (
                 <Dashboard onCreate={() => setCreate(true)} />
-              ) : pathname === '/leads' ? (
+              ) : routePath === '/leads' ? (
                 <LeadsPage key={pathname} onCreate={() => setCreate(true)} />
-              ) : pathname === '/recovery' ? (
+              ) : routePath === '/recovery' ? (
                 <LeadsPage key={pathname} recovery onCreate={() => setCreate(true)} />
-              ) : pathname === '/contacts' ? (
+              ) : routePath === '/contacts' ? (
                 <LeadsPage key={pathname} contacts onCreate={() => setCreate(true)} />
-              ) : pathname === '/pipeline' ? (
+              ) : routePath === '/pipeline' ? (
                 <PipelinePage onCreate={() => setCreate(true)} />
-              ) : pathname === '/companies' ? (
+              ) : routePath === '/companies' ? (
                 <CompaniesPage />
-              ) : pathname === '/conversations' ? (
+              ) : routePath === '/conversations' ? (
                 <ConversationsPage />
-              ) : pathname === '/payments' ? (
+              ) : routePath === '/payments' ? (
                 <PaymentsPage onCreate={() => setAction({ type: 'payment' })} />
-              ) : pathname === '/calendar' ? (
+              ) : routePath === '/calendar' ? (
                 <CalendarPage
                   onCreate={() => setAction({ type: 'appointment' })}
                   onEdit={(editId) => setAction({ type: 'appointment', editId })}
                 />
-              ) : pathname === '/integrations' ? (
+              ) : routePath === '/integrations' ? (
                 <IntegrationsPage />
-              ) : pathname === '/team' ? (
+              ) : routePath === '/team' ? (
                 <TeamPage />
-              ) : pathname === '/audit' ? (
+              ) : routePath === '/audit' ? (
                 <AuditPage />
-              ) : pathname === '/settings' ? (
+              ) : routePath === '/settings' ? (
                 <SettingsPage />
               ) : (
                 <Empty

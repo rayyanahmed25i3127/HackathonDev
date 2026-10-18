@@ -9,6 +9,7 @@ import {
   ArrowUpRight,
   Plus,
   MessageSquare,
+  MessageCircle,
   Send,
   StickyNote,
   CalendarDays,
@@ -46,6 +47,16 @@ export function LeadDetail({ onAction }: { onAction: (type: string, leadId?: str
   const messages = data.messages.filter((m) => m.leadId === l.id);
   const payments = data.payments.filter((p) => p.leadId === l.id);
   const appointments = data.appointments.filter((a) => a.leadId === l.id);
+  const openWhatsApp = () => {
+    const rawPhone = l.phone.trim();
+    const phone = rawPhone.replace(/\D/g, '');
+    if (!rawPhone.startsWith('+') || phone.length < 8 || phone.length > 15) {
+      notify('Add this contact’s phone number in complete international format, including country code (for example, +923001234567).', 'error');
+      return;
+    }
+    const message = `Hi ${l.name}, following up on our conversation. How can I help?`;
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+  };
   function saveNote(e: React.FormEvent) {
     e.preventDefault();
     if (!note.trim() || !l) return;
@@ -109,6 +120,10 @@ export function LeadDetail({ onAction }: { onAction: (type: string, leadId?: str
             <Phone size={13} />
             {l.phone}
           </a>
+          <button type="button" className="text-link" onClick={openWhatsApp}>
+            <MessageCircle size={13} />
+            Message on WhatsApp
+          </button>
         </div>
         <div className={`ownership-card ${!l.acknowledgedAt ? 'pending' : ''}`}>
           <div className="ownership-top">
@@ -305,7 +320,7 @@ export function LeadDetail({ onAction }: { onAction: (type: string, leadId?: str
                 </Button>
                 <Button variant="secondary" size="sm" onClick={() => onAction('payment', l.id)}>
                   <Wallet size={14} />
-                  Payment request
+                  Pay with Safepay (Sandbox)
                 </Button>
                 <Button variant="secondary" size="sm" onClick={() => onAction('appointment', l.id)}>
                   <CalendarDays size={14} />
@@ -401,7 +416,7 @@ export function LeadDetail({ onAction }: { onAction: (type: string, leadId?: str
                 <h3>Payment history</h3>
                 <Button size="sm" onClick={() => onAction('payment', l.id)}>
                   <Plus size={13} />
-                  Request payment
+                  Pay with Safepay (Sandbox)
                 </Button>
               </div>
               {payments.map((p) => (

@@ -5,12 +5,12 @@ import { googleAuthorizationUrl } from "@/lib/integrations/google-calendar";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const { profile } = await requireUser(request);
     if (!['Owner', 'Admin'].includes(profile.role)) return NextResponse.json({ code: "FORBIDDEN", message: "Workspace admin permission required." }, { status: 403 });
     const state = createGoogleState(profile.id, profile.workspace_id);
-    const response = NextResponse.redirect(googleAuthorizationUrl(state.value));
+    const response = NextResponse.json({ authorizationUrl: googleAuthorizationUrl(state.value) });
     response.cookies.set("google_oauth_state", state.value, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/api/integrations/google", maxAge: state.maxAge });
     return response;
   } catch (error) {

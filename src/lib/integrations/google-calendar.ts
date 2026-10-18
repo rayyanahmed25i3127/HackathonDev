@@ -21,6 +21,10 @@ function config() {
   if (!clientId || !clientSecret || !redirectUri) {
     throw new Error("Google OAuth is not configured.");
   }
+  const redirect = new URL(redirectUri);
+  if (redirect.hostname === "0.0.0.0" || redirect.hostname === "127.0.0.1") {
+    throw new Error("GOOGLE_REDIRECT_URI must use http://localhost:3000 locally.");
+  }
   return { clientId, clientSecret, redirectUri };
 }
 
@@ -42,7 +46,21 @@ async function tokenRequest(body: URLSearchParams) {
     return safeError("Google token request could not be confirmed.");
   }
   const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!response.ok || !payload) return safeError("Google token request failed.");
+  const providerError = payload && typeof payload.error === "string" ? payload.error : undefined;
+  if (!response.ok || !payload) {
+    console.error("[google-oauth] token exchange rejected", {
+      httpStatus: response.status,
+      oauthError: providerError ?? "invalid_response",
+    });
+    return safeError("Google token request failed.");
+  }
+  if (providerError) {
+    console.error("[google-oauth] token exchange returned an OAuth error", {
+      httpStatus: response.status,
+      oauthError: providerError,
+    });
+    return safeError("Google token request failed.");
+  }
   return payload;
 }
 
