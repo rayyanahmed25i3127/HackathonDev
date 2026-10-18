@@ -57,6 +57,8 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     (async () => {
       const { data: auth } = await supabase.auth.getSession();
       if (!auth.session) return;
+      // Authenticated workspaces must never fall back to seeded demo records.
+      setData((current) => ({ ...current, leads: [] }));
       const response = await fetch('/api/v1/leads?limit=100', {
         headers: { Authorization: `Bearer ${auth.session.access_token}` },
       });
