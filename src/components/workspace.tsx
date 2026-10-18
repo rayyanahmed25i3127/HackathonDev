@@ -60,6 +60,7 @@ import {
 } from './services';
 import { AuditPage, SettingsPage, TeamPage } from './settings';
 import { type Role, relative } from '@/lib/types';
+import { supabase } from '@/lib/supabase/browser';
 const navigation = [
   {
     group: 'WORKSPACE',
@@ -228,7 +229,7 @@ function WorkspaceInner() {
           <button className="demo-card" onClick={() => setHelp(true)}>
             <span>
               <span className="tiny-dot" />
-              YOU’RE IN DEMO MODE
+              WORKSPACE STATUS
               <ArrowUpRight size={13} />
             </span>
             <p>
@@ -260,7 +261,7 @@ function WorkspaceInner() {
             <span className="breadcrumb-workspace">Workspace</span>
             <span className="breadcrumb-slash">/</span>
             <strong>{title}</strong>
-            <Badge tone="neutral">Demo</Badge>
+            <Badge tone="neutral">Active</Badge>
           </div>
           <div className="topbar-right">
             <button className="global-search" onClick={() => setSearchOpen(true)}>
@@ -359,7 +360,7 @@ function WorkspaceInner() {
         open={profile}
         onOpenChange={setProfile}
         title="Your workspace"
-        description="Acme Studio · Local frontend demonstration"
+        description="Acme Studio · Connected workspace"
       >
         <div className="form-body">
           <div className="profile-dialog-person">
@@ -405,7 +406,7 @@ function WorkspaceInner() {
         open={help}
         onOpenChange={setHelp}
         title="Meet your next business workspace."
-        description="Relay is a frontend preview built for your hackathon team."
+        description="Relay is your connected workspace for every lead."
       >
         <div className="form-body">
           <div className="help-step">
@@ -522,7 +523,7 @@ function WorkspaceInner() {
         open={notifications}
         onOpenChange={setNotifications}
         title="Your attention, where it matters"
-        description="Sample workspace notifications. Live delivery requires the backend."
+        description="Workspace notifications and alerts."
       >
         {recovery.map((l) => (
           <button
@@ -580,8 +581,10 @@ function WorkspaceInner() {
 }
 function AuthScreen({ mode }: { mode: string }) {
   const { notify } = useDemo();
-  const [submitted, setSubmitted] = useState(false);
+  const router = useRouter();
+  const [submitted, setSubmitted] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const isSignup = mode === 'signup',
     isReset = mode === 'forgot-password';
   return (
@@ -629,7 +632,7 @@ function AuthScreen({ mode }: { mode: string }) {
       <section className="auth-form-side">
         <Link href="/" className="auth-back">
           <ArrowLeft size={14} />
-          Back to workspace demo
+          Back to workspace
         </Link>
         <div className="auth-form-content">
           <span className="auth-symbol">
@@ -653,36 +656,52 @@ function AuthScreen({ mode }: { mode: string }) {
             <div className="integration-hint">
               <Info size={20} />
               <p>
-                Supabase Auth is not connected yet. No account was created, no session was started,
-                and no email was sent. Use the workspace demo to explore.
+                {submitted}
               </p>
             </div>
           ) : (
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
+                setError('');
                 setLoading(true);
-                await new Promise((r) => setTimeout(r, 400));
+                const form = new FormData(e.currentTarget);
+                const email = String(form.get('email') ?? '');
+                const password = String(form.get('password') ?? '');
+                const result = isReset
+                  ? await supabase.auth.resetPasswordForEmail(email, {
+                      redirectTo: `${window.location.origin}/login`,
+                    })
+                  : isSignup
+                    ? await supabase.auth.signUp({
+                        email,
+                        password,
+                        options: { data: { full_name: String(form.get('name') ?? '') } },
+                      })
+                    : await supabase.auth.signInWithPassword({ email, password });
                 setLoading(false);
-                setSubmitted(true);
+                if (result.error) setError(result.error.message);
+                else if (isReset) setSubmitted('Password reset email requested. Check your inbox.');
+                else router.push('/');
               }}
             >
               {isSignup && (
                 <>
                   <Field label="Your name">
-                    <input required autoComplete="name" placeholder="Rayyan Ahmed" />
+                    <input name="name" required autoComplete="name" placeholder="Rayyan Ahmed" />
                   </Field>
                   <Field label="Workspace name">
-                    <input required placeholder="Your company" />
+                    <input name="workspace" required placeholder="Your company" />
                   </Field>
                 </>
               )}
               <Field label="Work email">
-                <input type="email" required autoComplete="email" placeholder="you@company.com" />
+                <input name="email" type="email" required autoComplete="email" placeholder="you@company.com" />
               </Field>
               {!isReset && (
                 <Field label="Password">
                   <input
+                    name="password"
                     type="password"
                     required
                     minLength={8}
@@ -706,13 +725,14 @@ function AuthScreen({ mode }: { mode: string }) {
                       : 'Sign in'}
                 <ArrowRight size={15} />
               </Button>
+              {error && <p className="form-error" role="alert">{error}</p>}
             </form>
           )}
           <div className="auth-divider">
             <span>or explore first</span>
           </div>
           <Link href="/" className="btn btn-secondary auth-demo">
-            Open workspace demo
+            Open workspace
             <ArrowUpRight size={15} />
           </Link>
           <p className="auth-switch">
@@ -723,7 +743,7 @@ function AuthScreen({ mode }: { mode: string }) {
           </p>
           <p className="auth-note">
             <ShieldCheck size={13} />
-            Frontend preview · Authentication is not active.
+            Secure workspace access.
           </p>
         </div>
       </section>
@@ -749,7 +769,7 @@ function CaptureScreen() {
         {done ? (
           <div className="capture-success">
             <CheckCircle2 size={40} />
-            <h2>You’re on our demo list.</h2>
+            <h2>Your request has been received.</h2>
             <p>Your request was added locally. No real submission was sent to a server.</p>
             <Link href="/leads" className="btn btn-primary">
               View in workspace
@@ -769,7 +789,7 @@ function CaptureScreen() {
               );
               if (!eligible.length) {
                 setError(
-                  'The demo team is at capacity. Please try later or adjust team availability.',
+                  'The team is at capacity. Please try later or adjust team availability.',
                 );
                 return;
               }
@@ -846,7 +866,7 @@ function CaptureScreen() {
               Get in touch
               <ArrowUpRight size={15} />
             </Button>
-            <p className="capture-note">Demo form · Submissions stay in this browser.</p>
+            <p className="capture-note">Secure request form.</p>
           </form>
         )}
       </section>

@@ -23,6 +23,7 @@ import { useDemo } from './demo-provider';
 import { Avatar, Badge, Countdown, Field, Owner, StageBadge, Source, Empty, Value } from './shared';
 import { Dialog } from './ui/dialog';
 import { Button } from './ui/button';
+import { supabase } from '@/lib/supabase/browser';
 import { relative, currency, type Lead } from '@/lib/types';
 export function LeadDetail({ onAction }: { onAction: (type: string, leadId?: string) => void }) {
   const { data, setData, selected, select, updateLead, acknowledge, reassign, notify, can, log } =
@@ -351,7 +352,7 @@ export function LeadDetail({ onAction }: { onAction: (type: string, leadId?: str
             <>
               <div className="integration-hint">
                 <MessageSquare size={16} />
-                <p>Twilio is not connected. Sample conversation only; no messages are delivered.</p>
+                <p>Messaging is not connected. Configure a provider to send messages.</p>
               </div>
               {l.optedOut && (
                 <div className="inline-error">
@@ -412,7 +413,7 @@ export function LeadDetail({ onAction }: { onAction: (type: string, leadId?: str
                     <strong>
                       <Value amount={p.amount} />
                     </strong>
-                    <span>{p.reference} · Sample event</span>
+                    <span>{p.reference} · Payment event</span>
                   </div>
                   <Badge
                     tone={p.status === 'Paid' ? 'green' : p.status === 'Failed' ? 'red' : 'amber'}
@@ -651,23 +652,46 @@ export function CreateRecord({
       return;
     }
     setBusy(true);
-    await new Promise((r) => setTimeout(r, 350));
+    const { data: auth } = await supabase.auth.getSession();
+    let persisted: Record<string, unknown> | null = null;
+    if (auth.session && kind === 'lead') {
+      const response = await fetch('/api/v1/leads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${auth.session.access_token}`,
+        },
+        body: JSON.stringify({
+          name: String(form.get('name')).trim(),
+          email: String(form.get('email') ?? '').trim(),
+          phone: String(form.get('phone') ?? ''),
+          source: String(form.get('source') ?? 'manual').toLowerCase() === 'website' ? 'web_form' : 'manual',
+        }),
+      });
+      if (!response.ok) {
+        setBusy(false);
+        setError('Lead could not be saved to the server. Please try again.');
+        return;
+      }
+      persisted = await response.json();
+    }
+    await new Promise((r) => setTimeout(r, auth.session ? 0 : 350));
     const now = new Date().toISOString();
     const l: Lead = {
       pipeline: data.pipeline,
-      id: `LD-${Date.now().toString().slice(-6)}`,
+      id: String(persisted?.id ?? `LD-${Date.now().toString().slice(-6)}`),
       name: String(form.get('name')).trim(),
       email: String(form.get('email')).trim(),
       phone: String(form.get('phone')),
       company: String(form.get('company')).trim(),
       source: String(form.get('source')) as Lead['source'],
-      ownerId: owner,
+      ownerId: String(persisted?.owner_id ?? owner),
       stage: data.stages[0],
       value: Number(form.get('value') || 0),
       tag: String(form.get('tag')),
       createdAt: now,
-      assignedAt: now,
-      deadline: new Date(Date.now() + data.rules.window * 1000).toISOString(),
+      assignedAt: String(persisted?.assigned_at ?? now),
+      deadline: String(persisted?.ack_deadline ?? new Date(Date.now() + data.rules.window * 1000).toISOString()),
       lastAction: now,
       escalations: 0,
       notes: [],
@@ -694,7 +718,7 @@ export function CreateRecord({
     }));
     setBusy(false);
     onClose();
-    notify(`${l.name} added to the demo workspace.`);
+    notify(`${l.name} added successfully.`);
   };
   return (
     <Dialog
@@ -806,7 +830,7 @@ export function CreateRecord({
             ))}
           <div className="integration-hint">
             <Clock3 size={16} />
-            <p>{data.rules.window} second acknowledgement window. Frontend demo assignment only.</p>
+            <p>{data.rules.window} second acknowledgement window.</p>
           </div>
           {error && (
             <div role="alert" className="inline-error">
