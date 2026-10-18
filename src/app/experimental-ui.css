@@ -1208,6 +1208,24 @@ tbody tr:hover {
 .capture-success p {
   color: #5a8197;
 }
+/* Override the original inline greens only while the experimental theme is active. */
+.stage-bar-row:nth-child(4n + 1) {
+  --stage-blue: #96bfd5;
+}
+.stage-bar-row:nth-child(4n + 2) {
+  --stage-blue: #73abc9;
+}
+.stage-bar-row:nth-child(4n + 3) {
+  --stage-blue: #4e8fb3;
+}
+.stage-bar-row:nth-child(4n + 4) {
+  --stage-blue: #286d97;
+}
+.stage-bar-row .bar-track > span,
+.stage-bar-row > div:first-child > span > i {
+  background: var(--stage-blue) !important;
+}
+
 @media (min-width: 1251px) {
   .dashboard-charts {
     gap: 24px;
