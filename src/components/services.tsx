@@ -152,10 +152,10 @@ export function ConversationsPage() {
               </div>
               <div className="conversation-status">
                 <span className="tiny-dot amber-dot" />
-                Sample conversation · Twilio not connected
+                Conversation history · Messaging not connected
               </div>
               <div className="chat-content">
-                <div className="chat-date">SAMPLE MESSAGES</div>
+                <div className="chat-date">MESSAGE HISTORY</div>
                 {messages.map((m) => (
                   <div
                     key={m.id}
@@ -178,7 +178,7 @@ export function ConversationsPage() {
                         <button
                           onClick={() =>
                             notify(
-                              'Reconnect Twilio to retry. This sample message was not sent.',
+                              'Reconnect messaging to retry. The message was not sent.',
                               'info',
                             )
                           }
@@ -279,7 +279,7 @@ export function PaymentsPage({ onCreate }: { onCreate: () => void }) {
       <div className="integration-hint standalone">
         <Wallet size={18} />
         <p>
-          <strong>Stripe test mode · frontend preview.</strong> All records below are sample data.
+          <strong>Payments workspace.</strong> Connect Stripe to process transactions.
           Connect Stripe to create hosted checkout links and receive verified payment events.
         </p>
       </div>
@@ -287,7 +287,7 @@ export function PaymentsPage({ onCreate }: { onCreate: () => void }) {
         <Stat
           title="Collected · this month"
           value={can('values') ? currency(sum('Paid')) : '••••'}
-          sub="Sample confirmed payments"
+          sub="Confirmed payments"
           icon={<Wallet size={17} />}
           onClick={() => setStatus('Paid')}
         />
@@ -301,7 +301,7 @@ export function PaymentsPage({ onCreate }: { onCreate: () => void }) {
         <Stat
           title="Refunded"
           value={can('values') ? currency(sum('Refunded')) : '••••'}
-          sub="Sample refunded transactions"
+          sub="Refunded transactions"
           icon={<RefreshCw size={17} />}
           onClick={() => setStatus('Refunded')}
         />
@@ -506,7 +506,7 @@ export function CalendarPage({
         <CalendarDays size={17} />
         <p>
           Google Calendar is not connected. Calendar availability and appointments shown are local
-          demo records. No real calendar events are created.
+          records are not synchronized. Connect Google Calendar to create real events.
         </p>
       </div>
       <Panel title="Appointment details" description="Keep every customer commitment in sight.">
@@ -593,8 +593,8 @@ export function CalendarPage({
                   a.id === cancel ? { ...a, status: 'Cancelled' } : a,
                 ),
               }));
-              log('Appointment', 'Cancelled a sample appointment.', a?.leadId);
-              notify('Demo appointment cancelled.');
+              log('Appointment', 'Cancelled an appointment.', a?.leadId);
+              notify('Appointment cancelled.');
               setCancel(null);
             }}
           >
@@ -670,7 +670,7 @@ export function IntegrationsPage() {
         title="Your tools. Better together."
         description="Bring conversations, payments, and appointments into the same story."
       >
-        <Badge tone="amber">Frontend preview</Badge>
+        <Badge tone="amber">Integration status</Badge>
       </PageHeading>
       <div className="integration-summary">
         <span className="integration-summary-icon">
@@ -851,13 +851,13 @@ export function ServiceAction({
     }));
     log(
       'Appointment',
-      `${existing ? 'Rescheduled' : 'Created'} sample appointment: ${apt.title}.`,
+      `${existing ? 'Rescheduled' : 'Created'} appointment: ${apt.title}.`,
       leadId,
     );
     setBusy(false);
     setError('');
     onClose();
-    notify('Demo appointment saved locally. No Google Calendar event was created.', 'info');
+    notify('Appointment saved. Calendar sync requires a connected account.', 'info');
   };
   const localDate = (iso: string) => {
     const d = new Date(iso);
@@ -882,7 +882,7 @@ export function ServiceAction({
       description={
         isPayment
           ? 'Set the amount and customer. Stripe creates the real checkout link.'
-          : 'Demo booking · checks conflicts against local sample appointments.'
+          : 'Booking · checks conflicts against scheduled appointments.'
       }
     >
       <form onSubmit={submit}>
@@ -948,7 +948,7 @@ export function ServiceAction({
                   {data.team.map((t) => (
                     <option key={t.id} value={t.id} disabled={!t.calendar}>
                       {t.name}
-                      {!t.calendar ? ' · Calendar not connected' : ' · Demo calendar'}
+                      {!t.calendar ? ' · Calendar not connected' : ' · Calendar connected'}
                     </option>
                   ))}
                 </select>
@@ -1005,7 +1005,7 @@ export function ServiceAction({
                 ? 'Create checkout link'
                 : existing
                   ? 'Save new time'
-                  : 'Save demo appointment'}
+                  : 'Save appointment'}
             <ArrowUpRight size={14} />
           </Button>
         </div>

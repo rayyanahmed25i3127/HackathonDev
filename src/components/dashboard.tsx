@@ -434,7 +434,7 @@ export default function Dashboard({ onCreate }: { onCreate: () => void }) {
             </span>
             <div>
               <strong>{can('values') ? currency(collected) : '••••'}</strong>
-              <span>{payments.length} sample payments collected</span>
+              <span>{payments.length} payments collected</span>
             </div>
             <Badge tone="green">Test data</Badge>
           </div>

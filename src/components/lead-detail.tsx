@@ -352,7 +352,7 @@ export function LeadDetail({ onAction }: { onAction: (type: string, leadId?: str
             <>
               <div className="integration-hint">
                 <MessageSquare size={16} />
-                <p>Twilio is not connected. Sample conversation only; no messages are delivered.</p>
+                <p>Messaging is not connected. Configure a provider to send messages.</p>
               </div>
               {l.optedOut && (
                 <div className="inline-error">
@@ -413,7 +413,7 @@ export function LeadDetail({ onAction }: { onAction: (type: string, leadId?: str
                     <strong>
                       <Value amount={p.amount} />
                     </strong>
-                    <span>{p.reference} · Sample event</span>
+                    <span>{p.reference} · Payment event</span>
                   </div>
                   <Badge
                     tone={p.status === 'Paid' ? 'green' : p.status === 'Failed' ? 'red' : 'amber'}
@@ -830,7 +830,7 @@ export function CreateRecord({
             ))}
           <div className="integration-hint">
             <Clock3 size={16} />
-            <p>{data.rules.window} second acknowledgement window. Frontend demo assignment only.</p>
+            <p>{data.rules.window} second acknowledgement window.</p>
           </div>
           {error && (
             <div role="alert" className="inline-error">

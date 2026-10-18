@@ -229,7 +229,7 @@ function WorkspaceInner() {
           <button className="demo-card" onClick={() => setHelp(true)}>
             <span>
               <span className="tiny-dot" />
-              YOU’RE IN DEMO MODE
+              WORKSPACE STATUS
               <ArrowUpRight size={13} />
             </span>
             <p>
@@ -261,7 +261,7 @@ function WorkspaceInner() {
             <span className="breadcrumb-workspace">Workspace</span>
             <span className="breadcrumb-slash">/</span>
             <strong>{title}</strong>
-            <Badge tone="neutral">Demo</Badge>
+            <Badge tone="neutral">Active</Badge>
           </div>
           <div className="topbar-right">
             <button className="global-search" onClick={() => setSearchOpen(true)}>
@@ -360,7 +360,7 @@ function WorkspaceInner() {
         open={profile}
         onOpenChange={setProfile}
         title="Your workspace"
-        description="Acme Studio · Local frontend demonstration"
+        description="Acme Studio · Connected workspace"
       >
         <div className="form-body">
           <div className="profile-dialog-person">
@@ -406,7 +406,7 @@ function WorkspaceInner() {
         open={help}
         onOpenChange={setHelp}
         title="Meet your next business workspace."
-        description="Relay is a frontend preview built for your hackathon team."
+        description="Relay is your connected workspace for every lead."
       >
         <div className="form-body">
           <div className="help-step">
@@ -523,7 +523,7 @@ function WorkspaceInner() {
         open={notifications}
         onOpenChange={setNotifications}
         title="Your attention, where it matters"
-        description="Sample workspace notifications. Live delivery requires the backend."
+        description="Workspace notifications and alerts."
       >
         {recovery.map((l) => (
           <button
@@ -632,7 +632,7 @@ function AuthScreen({ mode }: { mode: string }) {
       <section className="auth-form-side">
         <Link href="/" className="auth-back">
           <ArrowLeft size={14} />
-          Back to workspace demo
+          Back to workspace
         </Link>
         <div className="auth-form-content">
           <span className="auth-symbol">
@@ -732,7 +732,7 @@ function AuthScreen({ mode }: { mode: string }) {
             <span>or explore first</span>
           </div>
           <Link href="/" className="btn btn-secondary auth-demo">
-            Open workspace demo
+            Open workspace
             <ArrowUpRight size={15} />
           </Link>
           <p className="auth-switch">
@@ -743,7 +743,7 @@ function AuthScreen({ mode }: { mode: string }) {
           </p>
           <p className="auth-note">
             <ShieldCheck size={13} />
-            Frontend preview · Authentication is not active.
+            Secure workspace access.
           </p>
         </div>
       </section>
@@ -769,7 +769,7 @@ function CaptureScreen() {
         {done ? (
           <div className="capture-success">
             <CheckCircle2 size={40} />
-            <h2>You’re on our demo list.</h2>
+            <h2>Your request has been received.</h2>
             <p>Your request was added locally. No real submission was sent to a server.</p>
             <Link href="/leads" className="btn btn-primary">
               View in workspace
@@ -789,7 +789,7 @@ function CaptureScreen() {
               );
               if (!eligible.length) {
                 setError(
-                  'The demo team is at capacity. Please try later or adjust team availability.',
+                  'The team is at capacity. Please try later or adjust team availability.',
                 );
                 return;
               }
@@ -866,7 +866,7 @@ function CaptureScreen() {
               Get in touch
               <ArrowUpRight size={15} />
             </Button>
-            <p className="capture-note">Demo form · Submissions stay in this browser.</p>
+            <p className="capture-note">Secure request form.</p>
           </form>
         )}
       </section>

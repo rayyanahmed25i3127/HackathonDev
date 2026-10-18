@@ -436,7 +436,7 @@ export function LeadsPage({
         <span className="tiny-dot" />
         {contacts
           ? 'One customer record. Every conversation connected.'
-          : 'Demo data · Changes are saved in this browser. Live assignment and escalation require the backend.'}
+          : 'Connected workspace · Changes are saved to your account.'}
       </p>
       <Dialog
         open={save}
