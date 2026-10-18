@@ -60,6 +60,7 @@ import {
 } from './services';
 import { AuditPage, SettingsPage, TeamPage } from './settings';
 import { type Role, relative } from '@/lib/types';
+import { supabase } from '@/lib/supabase/browser';
 const navigation = [
   {
     group: 'WORKSPACE',
@@ -580,8 +581,10 @@ function WorkspaceInner() {
 }
 function AuthScreen({ mode }: { mode: string }) {
   const { notify } = useDemo();
-  const [submitted, setSubmitted] = useState(false);
+  const router = useRouter();
+  const [submitted, setSubmitted] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const isSignup = mode === 'signup',
     isReset = mode === 'forgot-password';
   return (
@@ -653,36 +656,52 @@ function AuthScreen({ mode }: { mode: string }) {
             <div className="integration-hint">
               <Info size={20} />
               <p>
-                Supabase Auth is not connected yet. No account was created, no session was started,
-                and no email was sent. Use the workspace demo to explore.
+                {submitted}
               </p>
             </div>
           ) : (
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
+                setError('');
                 setLoading(true);
-                await new Promise((r) => setTimeout(r, 400));
+                const form = new FormData(e.currentTarget);
+                const email = String(form.get('email') ?? '');
+                const password = String(form.get('password') ?? '');
+                const result = isReset
+                  ? await supabase.auth.resetPasswordForEmail(email, {
+                      redirectTo: `${window.location.origin}/login`,
+                    })
+                  : isSignup
+                    ? await supabase.auth.signUp({
+                        email,
+                        password,
+                        options: { data: { full_name: String(form.get('name') ?? '') } },
+                      })
+                    : await supabase.auth.signInWithPassword({ email, password });
                 setLoading(false);
-                setSubmitted(true);
+                if (result.error) setError(result.error.message);
+                else if (isReset) setSubmitted('Password reset email requested. Check your inbox.');
+                else router.push('/');
               }}
             >
               {isSignup && (
                 <>
                   <Field label="Your name">
-                    <input required autoComplete="name" placeholder="Rayyan Ahmed" />
+                    <input name="name" required autoComplete="name" placeholder="Rayyan Ahmed" />
                   </Field>
                   <Field label="Workspace name">
-                    <input required placeholder="Your company" />
+                    <input name="workspace" required placeholder="Your company" />
                   </Field>
                 </>
               )}
               <Field label="Work email">
-                <input type="email" required autoComplete="email" placeholder="you@company.com" />
+                <input name="email" type="email" required autoComplete="email" placeholder="you@company.com" />
               </Field>
               {!isReset && (
                 <Field label="Password">
                   <input
+                    name="password"
                     type="password"
                     required
                     minLength={8}
@@ -706,6 +725,7 @@ function AuthScreen({ mode }: { mode: string }) {
                       : 'Sign in'}
                 <ArrowRight size={15} />
               </Button>
+              {error && <p className="form-error" role="alert">{error}</p>}
             </form>
           )}
           <div className="auth-divider">
