@@ -1,4 +1,10 @@
 -- Review with Anas before applying. This migration is not executed by this change.
+alter table public.leads
+  add constraint leads_workspace_id_id_unique unique (workspace_id, id);
+
+alter table public.contacts
+  add constraint contacts_workspace_id_id_unique unique (workspace_id, id);
+
 create table if not exists public.payments (
   id uuid primary key default gen_random_uuid(),
   workspace_id uuid not null references public.workspaces(id) on delete cascade,
@@ -12,7 +18,17 @@ create table if not exists public.payments (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   paid_at timestamptz,
-  constraint payments_linked_record_check check (lead_id is not null or contact_id is not null)
+  constraint payments_lead_workspace_fk
+    foreign key (workspace_id, lead_id)
+    references public.leads(workspace_id, id),
+  constraint payments_contact_workspace_fk
+    foreign key (workspace_id, contact_id)
+    references public.contacts(workspace_id, id),
+  constraint payments_linked_record_check check (
+    (lead_id is not null and contact_id is null)
+    or
+    (lead_id is null and contact_id is not null)
+  )
 );
 
 create index if not exists payments_workspace_created_idx on public.payments (workspace_id, created_at desc);
