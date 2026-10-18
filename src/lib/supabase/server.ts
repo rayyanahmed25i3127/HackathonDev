@@ -3,13 +3,18 @@ import "server-only";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest } from "next/server";
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const publishableKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-const secretKey = process.env.SUPABASE_SECRET_KEY;
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://placeholder.supabase.co";
+const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "build-placeholder-key";
+const secretKey = process.env.SUPABASE_SECRET_KEY ?? "build-placeholder-secret";
 
-if (!url || !publishableKey || !secretKey) {
-  throw new Error("Missing Supabase environment variables");
+function assertSupabaseEnv() {
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    !process.env.SUPABASE_SECRET_KEY
+  ) {
+    throw new Error("Missing Supabase environment variables");
+  }
 }
 
 export const adminDb = createClient(url, secretKey, {
@@ -27,6 +32,7 @@ const authClient = createClient(url, publishableKey, {
 });
 
 export async function requireUser(req: NextRequest) {
+  assertSupabaseEnv();
   const authorization = req.headers.get("authorization");
 
   if (!authorization?.startsWith("Bearer ")) {
