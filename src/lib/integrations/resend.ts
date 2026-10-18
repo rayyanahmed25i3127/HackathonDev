@@ -8,6 +8,7 @@ export async function sendLeadAlertEmail(
   leadName: string,
   alertType: LeadAlertType,
   message: string,
+  options?: { idempotencyKey?: string },
 ): Promise<{ id: string }> {
   const apiKey = process.env.RESEND_API_KEY?.trim();
   const from =
@@ -34,6 +35,9 @@ export async function sendLeadAlertEmail(
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
+        ...(options?.idempotencyKey
+          ? { "Idempotency-Key": options.idempotencyKey }
+          : {}),
       },
       body: JSON.stringify({
         from,
