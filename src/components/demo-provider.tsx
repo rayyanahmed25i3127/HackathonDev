@@ -11,6 +11,7 @@ import {
 } from 'react';
 import { createDemo, STORAGE_KEY } from '@/lib/demo';
 import { type DemoState, type Lead, type Activity, recoveryReason } from '@/lib/types';
+import { supabase } from '@/lib/supabase/browser';
 interface Context {
   data: DemoState;
   setData: Dispatch<SetStateAction<DemoState>>;
@@ -50,6 +51,41 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     } catch {}
     setReady(true);
   }, []);
+  useEffect(() => {
+    if (!ready) return;
+    let cancelled = false;
+    (async () => {
+      const { data: auth } = await supabase.auth.getSession();
+      if (!auth.session) return;
+      const response = await fetch('/api/v1/leads?limit=100', {
+        headers: { Authorization: `Bearer ${auth.session.access_token}` },
+      });
+      if (!response.ok || cancelled) return;
+      const payload = await response.json();
+      const liveLeads: Lead[] = (payload.items ?? []).map((item: Record<string, unknown>) => ({
+        id: String(item.id),
+        name: String(item.name ?? ''),
+        company: String(item.company ?? ''),
+        email: String(item.email ?? ''),
+        phone: String(item.phone ?? ''),
+        source: item.source === 'whatsapp' ? 'WhatsApp' : item.source === 'web_form' ? 'Website' : 'Manual',
+        ownerId: String(item.owner_id ?? ''),
+        stage: String(item.status ?? 'New'),
+        value: Number(item.value ?? 0),
+        tag: String(item.tag ?? ''),
+        createdAt: String(item.created_at ?? new Date().toISOString()),
+        assignedAt: String(item.assigned_at ?? item.created_at ?? new Date().toISOString()),
+        deadline: String(item.ack_deadline ?? item.created_at ?? new Date().toISOString()),
+        acknowledgedAt: item.acknowledged_at ? String(item.acknowledged_at) : undefined,
+        escalations: Number(item.escalation_level ?? 0),
+        lastAction: String(item.updated_at ?? item.created_at ?? new Date().toISOString()),
+        notes: [],
+        fields: {},
+      }));
+      setData((current) => ({ ...current, leads: liveLeads }));
+    })().catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [ready]);
   useEffect(() => {
     if (ready) {
       try {
@@ -131,9 +167,20 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     }));
     notify(text);
   };
-  const acknowledge = (id: string) => {
+  const acknowledge = async (id: string) => {
     const l = data.leads.find((l) => l.id === id);
     if (!l || l.acknowledgedAt) return;
+    const { data: auth } = await supabase.auth.getSession();
+    if (auth.session) {
+      const response = await fetch(`/api/v1/leads/${id}/acknowledge`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${auth.session.access_token}` },
+      });
+      if (!response.ok) {
+        notify('The server could not acknowledge this lead.', 'error');
+        return;
+      }
+    }
     updateLead(
       id,
       { acknowledgedAt: new Date().toISOString() },
