@@ -41,6 +41,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const [now, setNow] = useState(Date.now());
   const [toast, setToast] = useState<Context['toast']>(null);
   const [selected, select] = useState<string | null>(null);
+  const [authenticated, setAuthenticated] = useState(false);
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -57,9 +58,11 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     (async () => {
       const { data: auth } = await supabase.auth.getSession();
       if (!auth.session) return;
+      setAuthenticated(true);
       // Authenticated workspaces must never fall back to seeded demo records.
       setData((current) => ({ ...current, leads: [] }));
       const response = await fetch('/api/v1/leads?limit=100', {
+        cache: 'no-store',
         headers: { Authorization: `Bearer ${auth.session.access_token}` },
       });
       if (!response.ok || cancelled) return;
@@ -232,7 +235,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         select,
         can,
         visibleLeads: can('view')
-          ? data.leads.filter((l) => data.role !== 'User' || l.ownerId === 'rayyan')
+          ? data.leads.filter((l) => authenticated || data.role !== 'User' || l.ownerId === 'rayyan')
           : [],
         log,
         updateLead,
