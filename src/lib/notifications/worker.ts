@@ -53,7 +53,7 @@ export async function processLeadEscalationNotifications(limit = 10) {
       if (job.event_type !== "LEAD_ESCALATED") throw new Error("Unsupported notification event.");
       const [{ data: recipient, error: recipientError }, { data: lead, error: leadError }] = await Promise.all([
         adminDb.auth.admin.getUserById(job.recipient_id),
-        adminDb.from("leads").select("id, name, email, workspace_id, owner_id, deadline, escalations").eq("id", job.lead_id).eq("workspace_id", job.workspace_id).single(),
+        adminDb.from("leads").select("id, name, email, workspace_id, owner_id, ack_deadline, escalation_level").eq("id", job.lead_id).eq("workspace_id", job.workspace_id).single(),
       ]);
       const email = recipientError ? null : recipient.user?.email;
       if (!email || leadError || !lead || lead.workspace_id !== job.workspace_id) {

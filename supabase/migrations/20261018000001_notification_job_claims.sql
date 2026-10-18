@@ -43,3 +43,4 @@ end;
 $$;
 
 revoke all on function public.claim_notification_jobs(text, integer, interval, integer) from public, anon, authenticated;
+grant execute on function public.claim_notification_jobs(text, integer, interval, integer) to service_role;
