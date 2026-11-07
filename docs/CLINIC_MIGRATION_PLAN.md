@@ -4,7 +4,7 @@ This branch converts the Relay sales CRM into a single-clinic ERP. The work is s
 
 ## RASS profile
 
-RASS is a two-doctor outpatient clinic in Islamabad. Dr. Majid Hussain (R) handles dermatology and Dr. Maeirah Shafique (R) handles ophthalmology. The receptionist owns registration and booking; doctors maintain their own clinical notes and prescriptions. The current address is 3rd Floor, Plaza 95, Bunyad Plaza, Paradise Commercial Way, Phase 4 Bahria Town, Islamabad. Phone and 09:00–17:00 hours are provisional settings.
+RASS is a two-doctor outpatient clinic in Islamabad. Dr. Majid Hussain (R) handles dermatology and Dr. Maeirah Shafique (R) handles ophthalmology. The receptionist owns registration and booking; doctors maintain their own clinical notes and prescriptions. The current address is 3rd Floor, Plaza 95, Bunyad Plaza, Paradise Commercial Way, Phase 4 Bahria Town, Islamabad. Phone is provisional. Hours are 10:00–19:00, closed Friday and Sunday.
 
 ## Repository audit
 
