@@ -1,4 +1,4 @@
-export const clinicName = process.env.NEXT_PUBLIC_CLINIC_NAME?.trim() || 'Clinic';
+export const clinicName = process.env.NEXT_PUBLIC_CLINIC_NAME?.trim() || 'RASS';
 export const clinicTimezone = process.env.APP_TIMEZONE?.trim() || 'Asia/Karachi';
 
 export function normalizePkPhone(input: string): string {
