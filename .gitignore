@@ -13,6 +13,8 @@ build/
 .next/
 coverage/
 .vite/
+*.tsbuildinfo
+test-results/
 
 # Local system and editor files
 .DS_Store
