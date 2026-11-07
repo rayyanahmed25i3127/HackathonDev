@@ -61,6 +61,7 @@ import {
 import { AuditPage, SettingsPage, TeamPage } from './settings';
 import { type Role, relative } from '@/lib/types';
 import { supabase } from '@/lib/supabase/browser';
+import ClinicQueue from './clinic-queue';
 const navigation = [
   {
     group: 'WORKSPACE',
@@ -298,13 +299,13 @@ function WorkspaceInner() {
               {routePath === '/' ? (
                 <Dashboard onCreate={() => setCreate(true)} />
               ) : routePath === '/leads' ? (
-                <LeadsPage key={pathname} onCreate={() => setCreate(true)} />
+                <ClinicQueue patientsOnly />
               ) : routePath === '/recovery' ? (
                 <LeadsPage key={pathname} recovery onCreate={() => setCreate(true)} />
               ) : routePath === '/contacts' ? (
                 <LeadsPage key={pathname} contacts onCreate={() => setCreate(true)} />
               ) : routePath === '/pipeline' ? (
-                <PipelinePage onCreate={() => setCreate(true)} />
+                <ClinicQueue />
               ) : routePath === '/companies' ? (
                 <CompaniesPage />
               ) : routePath === '/conversations' ? (
