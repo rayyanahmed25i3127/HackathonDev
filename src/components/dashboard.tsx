@@ -97,33 +97,33 @@ export default function Dashboard({ onCreate }: { onCreate: () => void }) {
   const metrics = [
     {
       id: 'leads',
-      title: 'New leads today',
+      title: 'Appointments today',
       value: String(newToday).padStart(2, '0'),
-      sub: `${leads.length} total in your workspace`,
+      sub: `${leads.length} patients in your records`,
       icon: <Users size={17} />,
       href: '/leads?date=today',
     },
     {
       id: 'pipeline',
-      title: 'Open pipeline value',
+      title: 'Upcoming appointments',
       value: can('values') ? shortMoney(value) : '••••',
-      sub: `Across ${open.length} open opportunities`,
+      sub: `Across ${open.length} scheduled visits`,
       icon: <Layers3 size={17} />,
       href: '/pipeline',
     },
     {
       id: 'response',
-      title: 'Avg. first response',
+      title: 'Patients seen',
       value: `${avg} min`,
-      sub: `${responses.length} acknowledged leads`,
+      sub: `${responses.length} completed visits`,
       icon: <Clock3 size={17} />,
       href: '/leads?ack=yes',
     },
     {
       id: 'recovery',
-      title: 'Leads needing attention',
+      title: 'Follow-ups due',
       value: String(recovery.length).padStart(2, '0'),
-      sub: `${escalations} escalation${escalations !== 1 ? 's' : ''} in the last 24h`,
+      sub: `${escalations} follow-up${escalations !== 1 ? 's' : ''} need attention`,
       icon: <ShieldAlert size={17} />,
       href: '/recovery',
     },
@@ -141,7 +141,7 @@ export default function Dashboard({ onCreate }: { onCreate: () => void }) {
         </Button>
         <Button onClick={onCreate} disabled={!can('create')}>
           <Plus size={16} />
-          New lead
+          Register patient
         </Button>
       </PageHeading>
       <div className="overview-banner">

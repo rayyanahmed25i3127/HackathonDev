@@ -65,28 +65,25 @@ const navigation = [
   {
     group: 'WORKSPACE',
     items: [
-      { label: 'Overview', href: '/', icon: LayoutDashboard },
-      { label: 'Leads', href: '/leads', icon: Users },
-      { label: 'Pipeline', href: '/pipeline', icon: Columns3 },
-      { label: 'Recovery queue', href: '/recovery', icon: ShieldAlert },
+      { label: 'Today', href: '/', icon: LayoutDashboard },
+      { label: 'Patients', href: '/leads', icon: Users },
+      { label: "Today's queue", href: '/pipeline', icon: Columns3 },
+      { label: 'Follow-ups', href: '/recovery', icon: ShieldAlert },
     ],
   },
   {
     group: 'CUSTOMER RELATIONSHIPS',
     items: [
-      { label: 'Contacts', href: '/contacts', icon: ContactRound },
-      { label: 'Companies', href: '/companies', icon: Building2 },
-      { label: 'Conversations', href: '/conversations', icon: MessageSquare },
-      { label: 'Payments', href: '/payments', icon: Wallet },
       { label: 'Appointments', href: '/calendar', icon: CalendarDays },
+      { label: 'WhatsApp', href: '/conversations', icon: MessageSquare },
     ],
   },
   {
     group: 'MANAGE',
     items: [
-      { label: 'Team', href: '/team', icon: Users },
-      { label: 'Integrations', href: '/integrations', icon: Plug },
-      { label: 'Audit history', href: '/audit', icon: History },
+      { label: 'Staff & doctors', href: '/team', icon: Users },
+      { label: 'Reports', href: '/reports', icon: Plug },
+      { label: 'Audit log', href: '/audit', icon: History },
       { label: 'Settings', href: '/settings', icon: Settings2 },
     ],
   },
@@ -112,7 +109,7 @@ function Loading() {
           <div className="brand-mark">
             r<span />
           </div>
-          <span>relay.</span>
+          <span>RASS</span>
         </div>
         {Array.from({ length: 9 }, (_, i) => (
           <span key={i} className="skeleton skeleton-nav" />
@@ -342,7 +339,7 @@ function WorkspaceInner() {
           </AnimatePresence>
           <footer className="main-footer">
             <span>
-              <span className="footer-logo">r.</span>Every lead, moving forward.
+              <span className="footer-logo">R</span>RASS Clinic Management
             </span>
             <button onClick={() => setHelp(true)}>
               <HelpCircle size={13} />
@@ -408,14 +405,14 @@ function WorkspaceInner() {
         open={help}
         onOpenChange={setHelp}
         title="Meet your next business workspace."
-        description="Relay is your connected workspace for every lead."
+        description="RASS clinic workspace for patients, visits, and appointments."
       >
         <div className="form-body">
           <div className="help-step">
             <span>01</span>
             <div>
-              <h3>Bring a new lead in</h3>
-              <p>Create a lead to see local round-robin assignment and a response countdown.</p>
+              <h3>Register a patient</h3>
+              <p>Register a patient and book a visit with the right doctor.</p>
             </div>
           </div>
           <div className="help-step">
@@ -431,7 +428,7 @@ function WorkspaceInner() {
           <div className="help-step">
             <span>03</span>
             <div>
-              <h3>Reconnect with at-risk leads</h3>
+              <h3>Review follow-ups</h3>
               <p>
                 Review the recovery queue and the read-only activity history. Change availability to
                 test local reassignment.
@@ -443,7 +440,7 @@ function WorkspaceInner() {
             <p>
               Changes stay in this browser. Supabase authentication, database persistence, real-time
               updates, server automation, and external provider connections are placeholders. No
-              messages, invitations, or payments are sent.
+              external messages or payments are sent.
             </p>
           </div>
         </div>
@@ -458,7 +455,7 @@ function WorkspaceInner() {
         open={searchOpen}
         onOpenChange={setSearchOpen}
         title="Find your next step"
-        description="Search leads, customers, companies, and workspace pages."
+        description="Search patients, appointments, and clinic pages."
       >
         <div className="command-search">
           <SearchInput value={query} onChange={setQuery} placeholder="Search workspace…" />
@@ -596,7 +593,7 @@ function AuthScreen({ mode }: { mode: string }) {
           <div className="brand-mark">
             r<span />
           </div>
-          <span>relay.</span>
+          <span>RASS</span>
         </Link>
         <div className="auth-story-main">
           <Badge tone="green">EVERY LEAD, MOVING FORWARD</Badge>
@@ -607,13 +604,12 @@ function AuthScreen({ mode }: { mode: string }) {
             <em>real connection.</em>
           </h1>
           <p>
-            One workspace for the people, conversations, and opportunities that move your business
-            forward.
+            One clinic workspace for patients, appointments, and excellent care.
           </p>
           <div className="auth-illustration">
             <div className="auth-float-card">
               <span className="tiny-dot" />
-              New lead assigned
+              Appointment confirmed
               <CheckCircle2 size={17} />
             </div>
             <div className="auth-connection">
@@ -625,7 +621,7 @@ function AuthScreen({ mode }: { mode: string }) {
             </div>
             <div className="auth-float-card second">
               <ShieldCheck size={17} />
-              No lead left behind.<span>↗</span>
+              Every patient cared for.<span>↗</span>
             </div>
           </div>
         </div>
@@ -762,7 +758,7 @@ function CaptureScreen() {
         <div className="brand-mark">
           r<span />
         </div>
-        <span>relay.</span>
+        <span>RASS</span>
       </Link>
       <section className="capture-card">
         <Badge tone="green">ACME STUDIO</Badge>
@@ -873,7 +869,7 @@ function CaptureScreen() {
         )}
       </section>
       <span className="capture-powered">
-        Powered by <strong>relay.</strong> Every lead, moving forward.
+        Powered by <strong>RASS.</strong> Care, coordinated.
       </span>
     </div>
   );

@@ -82,21 +82,21 @@ export function LeadsPage({
     <>
       <PageHeading
         eyebrow={
-          recovery ? 'LEAD PROTECTION' : contacts ? 'CUSTOMER RELATIONSHIPS' : 'LEAD MANAGEMENT'
+          recovery ? 'PATIENT FOLLOW-UPS' : contacts ? 'PATIENT RECORDS' : 'PATIENT MANAGEMENT'
         }
         title={
           recovery
             ? 'A second chance to connect.'
             : contacts
               ? 'People behind the pipeline.'
-              : 'Every lead. A clear next step.'
+              : 'Every patient. A clear next step.'
         }
         description={
           recovery
             ? 'Overdue, escalated, or quiet for too long. Bring these conversations back to life.'
             : contacts
               ? 'Customer context, conversations, and opportunities, all in one place.'
-              : 'Capture the interest. Keep the conversation moving.'
+              : 'Register patients, manage visits, and keep care moving.'
         }
       >
         <Button
@@ -112,7 +112,7 @@ export function LeadsPage({
         </Button>
         <Button onClick={onCreate} disabled={!can('create')}>
           <Plus size={16} />
-          {contacts ? 'Add contact' : 'New lead'}
+          {contacts ? 'Add patient' : 'Register patient'}
         </Button>
       </PageHeading>
       {recovery && (
