@@ -49,7 +49,7 @@ export async function requireUser(req: NextRequest) {
 
   const { data: profile, error: profileError } = await adminDb
     .from("profiles")
-    .select("id, workspace_id, role, full_name, availability")
+    .select("id, role, full_name, phone, is_active")
     .eq("id", data.user.id)
     .single();
 
