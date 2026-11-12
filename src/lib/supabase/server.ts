@@ -47,7 +47,15 @@ export async function requireUser(req: NextRequest) {
     throw new Error("UNAUTHORIZED");
   }
 
-  const { data: profile, error: profileError } = await adminDb
+  // Resolve the profile with the same authenticated token. This keeps profile
+  // lookup working with Supabase's newer publishable/secret key format and
+  // still applies the database RLS policy for the signed-in user.
+  const userDb = createClient(url, publishableKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const { data: profile, error: profileError } = await userDb
     .from("profiles")
     .select("id, role, full_name, phone, is_active")
     .eq("id", data.user.id)
