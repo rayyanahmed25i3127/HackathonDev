@@ -140,6 +140,8 @@ function WorkspaceInner() {
   const routePath = pathname.replace(/\/+$/, '') || '/';
   const router = useRouter();
   const { data, setData, ready, toast, select, notify, visibleLeads, can } = useDemo();
+  const [authReady, setAuthReady] = useState(false);
+  const [staff, setStaff] = useState<{ full_name: string; role: 'doctor' | 'receptionist' } | null>(null);
   const [mobile, setMobile] = useState(false);
   const [create, setCreate] = useState(false);
   const [profile, setProfile] = useState(false);
@@ -166,9 +168,26 @@ function WorkspaceInner() {
   useEffect(() => {
     setMobile(false);
   }, [pathname]);
+  useEffect(() => {
+    if (routePath === '/login' || routePath === '/signup' || routePath === '/forgot-password') {
+      setAuthReady(true);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data: auth } = await supabase.auth.getSession();
+      if (!auth.session) { router.replace('/login'); return; }
+      const response = await fetch('/api/v1/me', { headers: { Authorization: `Bearer ${auth.session.access_token}` }, cache: 'no-store' });
+      if (!response.ok) { await supabase.auth.signOut(); router.replace('/login'); return; }
+      const payload = await response.json();
+      if (!cancelled) { setStaff(payload.profile); setAuthReady(true); }
+    })();
+    return () => { cancelled = true; };
+  }, [routePath, router]);
   if (!ready) return <Loading />;
   if (routePath === '/login' || routePath === '/signup' || routePath === '/forgot-password')
     return <AuthScreen mode={routePath.slice(1)} />;
+  if (!authReady || !staff) return <Loading />;
   if (routePath === '/capture') return <CaptureScreen />;
   const kind =
     routePath === '/contacts' ? 'contact' : routePath === '/pipeline' ? 'opportunity' : 'lead';
@@ -196,8 +215,8 @@ function WorkspaceInner() {
             <Layers3 size={18} />
           </span>
           <span>
-            <strong>Acme Studio</strong>
-            <small>Business workspace</small>
+            <strong>RASS Clinic</strong>
+            <small>Connected workspace</small>
           </span>
           <ChevronsUpDown size={14} />
         </button>
@@ -239,10 +258,10 @@ function WorkspaceInner() {
             </p>
           </button>
           <button className="profile-button" onClick={() => setProfile(true)}>
-            <Avatar name="Rayyan Ahmed" color="violet" small />
+            <Avatar name={staff.full_name} color="violet" small />
             <span>
-              <strong>Rayyan Ahmed</strong>
-              <small>{data.role} · Acme Studio</small>
+              <strong>{staff.full_name}</strong>
+              <small>{staff.role} · RASS Clinic</small>
             </span>
             <ChevronsUpDown size={14} />
           </button>
@@ -283,7 +302,7 @@ function WorkspaceInner() {
               aria-label="Open profile"
               onClick={() => setProfile(true)}
             >
-              <Avatar name="Rayyan Ahmed" color="violet" small />
+              <Avatar name={staff.full_name} color="violet" small />
             </button>
           </div>
         </header>
@@ -360,14 +379,14 @@ function WorkspaceInner() {
         open={profile}
         onOpenChange={setProfile}
         title="Your workspace"
-        description="Acme Studio · Connected workspace"
+        description="RASS Clinic · Connected workspace"
       >
         <div className="form-body">
           <div className="profile-dialog-person">
-            <Avatar name="Rayyan Ahmed" />
+            <Avatar name={staff.full_name} />
             <div>
-              <h3>Rayyan Ahmed</h3>
-              <p>rayyan@example.com</p>
+              <h3>{staff.full_name}</h3>
+              <p>{staff.role}</p>
             </div>
           </div>
           <Field
@@ -395,11 +414,11 @@ function WorkspaceInner() {
             Open public lead form
             <ArrowUpRight size={14} />
           </Link>
-          <Link href="/login" className="profile-link" onClick={() => setProfile(false)}>
+          <button className="profile-link" onClick={async () => { await supabase.auth.signOut(); setProfile(false); router.replace('/login'); }}>
             <LogOut size={16} />
-            Open sign-in preview
+            Sign out
             <ArrowUpRight size={14} />
-          </Link>
+          </button>
         </div>
       </Dialog>
       <Dialog
