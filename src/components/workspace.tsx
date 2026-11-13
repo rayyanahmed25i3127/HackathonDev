@@ -62,6 +62,7 @@ import { AuditPage, SettingsPage, TeamPage } from './settings';
 import { type Role, relative } from '@/lib/types';
 import { supabase } from '@/lib/supabase/browser';
 import ClinicQueue from './clinic-queue';
+import ClinicSettings from './clinic-settings';
 const navigation = [
   {
     group: 'WORKSPACE',
@@ -356,7 +357,7 @@ function WorkspaceInner() {
               ) : routePath === '/audit' ? (
                 <AuditPage />
               ) : routePath === '/settings' ? (
-                <SettingsPage />
+                <ClinicSettings />
               ) : (
                 <Empty
                   title="This page has moved"
