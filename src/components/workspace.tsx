@@ -360,7 +360,6 @@ function WorkspaceInner() {
             <span>
               <span className="footer-logo">R</span>RASS Clinic Management
             </span>
-              <span>RASS Clinic Management</span>
           </footer>
         </main>
       </div>
