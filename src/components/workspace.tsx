@@ -63,29 +63,26 @@ import { type Role, relative } from '@/lib/types';
 import { supabase } from '@/lib/supabase/browser';
 import ClinicQueue from './clinic-queue';
 import ClinicSettings from './clinic-settings';
+import ClinicDashboard from './clinic-dashboard';
 const navigation = [
   {
     group: 'WORKSPACE',
     items: [
       { label: 'Today', href: '/', icon: LayoutDashboard },
       { label: 'Patients', href: '/leads', icon: Users },
-      { label: "Today's queue", href: '/pipeline', icon: Columns3 },
-      { label: 'Follow-ups', href: '/recovery', icon: ShieldAlert },
+      { label: 'Today’s queue', href: '/pipeline', icon: Columns3 },
     ],
   },
   {
     group: 'CUSTOMER RELATIONSHIPS',
     items: [
       { label: 'Appointments', href: '/calendar', icon: CalendarDays },
-      { label: 'WhatsApp', href: '/conversations', icon: MessageSquare },
     ],
   },
   {
     group: 'MANAGE',
     items: [
       { label: 'Staff & doctors', href: '/team', icon: Users },
-      { label: 'Reports', href: '/reports', icon: Plug },
-      { label: 'Audit log', href: '/audit', icon: History },
       { label: 'Settings', href: '/settings', icon: Settings2 },
     ],
   },
@@ -220,7 +217,7 @@ function WorkspaceInner() {
             r<span />
           </div>
           <span>
-            relay<span className="brand-period">.</span>
+            RASS
           </span>
           <span className="brand-version">WORKSPACE</span>
         </Link>
@@ -259,18 +256,6 @@ function WorkspaceInner() {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <button className="demo-card" onClick={() => setHelp(true)}>
-            <span>
-              <span className="tiny-dot" />
-              WORKSPACE STATUS
-              <ArrowUpRight size={13} />
-            </span>
-            <p>
-              A safe space to explore.
-              <br />
-              Your real data comes next.
-            </p>
-          </button>
           <button className="profile-button" onClick={() => setProfile(true)}>
             <Avatar name={staff.full_name} color="violet" small />
             <span>
@@ -330,7 +315,7 @@ function WorkspaceInner() {
               transition={{ duration: 0.18 }}
             >
               {routePath === '/' ? (
-                <Dashboard onCreate={() => setCreate(true)} />
+                <ClinicDashboard name={staff.full_name} />
               ) : routePath === '/leads' ? (
                 <ClinicQueue patientsOnly />
               ) : routePath === '/recovery' ? (
@@ -375,10 +360,7 @@ function WorkspaceInner() {
             <span>
               <span className="footer-logo">R</span>RASS Clinic Management
             </span>
-            <button onClick={() => setHelp(true)}>
-              <HelpCircle size={13} />
-              Help & demo guide
-            </button>
+              <span>RASS Clinic Management</span>
           </footer>
         </main>
       </div>
