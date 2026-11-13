@@ -30,7 +30,8 @@ const patientSchema = z.object({
 function errorResponse(error: unknown) {
   const message = error instanceof Error ? error.message : "Request failed";
   const status = message === "UNAUTHORIZED" ? 401 : message === "PROFILE_NOT_FOUND" ? 403 : 500;
-  return NextResponse.json({ code: status === 500 ? "SERVER_ERROR" : message, message: status === 500 ? "Request failed" : message }, { status });
+  const detail = typeof error === "object" && error !== null && "message" in error ? String((error as { message: unknown }).message) : message;
+  return NextResponse.json({ code: status === 500 ? "SERVER_ERROR" : message, message: status === 500 ? detail : message }, { status });
 }
 
 export async function GET(request: NextRequest) {
