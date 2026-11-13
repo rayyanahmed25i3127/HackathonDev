@@ -34,15 +34,16 @@ export default function ClinicQueue({ patientsOnly = false }: { patientsOnly?: b
   async function load() {
     const headers = await authHeaders();
     if (!headers) return;
-    const [patientResponse, visitResponse] = await Promise.all([
-      fetch(`/api/v1/patients?search=${encodeURIComponent(search)}`, { headers, cache: 'no-store' }),
-      fetch('/api/v1/visits', { headers, cache: 'no-store' }),
-    ]);
-    if (!patientResponse.ok || !visitResponse.ok) throw new Error('Could not load clinic records.');
+    const patientResponse = await fetch(`/api/v1/patients?search=${encodeURIComponent(search)}`, { headers, cache: 'no-store' });
+    if (!patientResponse.ok) throw new Error('Could not load patients.');
     const patientData = await patientResponse.json();
-    const visitData = await visitResponse.json();
     setPatients(patientData.items ?? []);
-    setVisits(visitData.items ?? []);
+    if (!patientsOnly) {
+      const visitResponse = await fetch('/api/v1/visits', { headers, cache: 'no-store' });
+      if (!visitResponse.ok) throw new Error('Could not load today’s queue.');
+      const visitData = await visitResponse.json();
+      setVisits(visitData.items ?? []);
+    }
     const { data: doctorsData } = await supabase.from('doctors').select('id,display_name,specialty').eq('is_active', true).order('display_name');
     const { data: servicesData } = await supabase.from('service_types').select('id,name,specialty').eq('is_active', true).order('name');
     setDoctors(doctorsData ?? []);
