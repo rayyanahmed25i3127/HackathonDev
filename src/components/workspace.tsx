@@ -142,6 +142,7 @@ function WorkspaceInner() {
   const { data, setData, ready, toast, select, notify, visibleLeads, can } = useDemo();
   const [authReady, setAuthReady] = useState(false);
   const [staff, setStaff] = useState<{ full_name: string; role: 'doctor' | 'receptionist' } | null>(null);
+  const [authError, setAuthError] = useState('');
   const [mobile, setMobile] = useState(false);
   const [create, setCreate] = useState(false);
   const [profile, setProfile] = useState(false);
@@ -177,17 +178,28 @@ function WorkspaceInner() {
     (async () => {
       const { data: auth } = await supabase.auth.getSession();
       if (!auth.session) { router.replace('/login'); return; }
-      const response = await fetch('/api/v1/me', { headers: { Authorization: `Bearer ${auth.session.access_token}` }, cache: 'no-store' });
-      if (!response.ok) { await supabase.auth.signOut(); router.replace('/login'); return; }
-      const payload = await response.json();
-      if (!cancelled) { setStaff(payload.profile); setAuthReady(true); }
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('full_name, role')
+        .eq('id', auth.session.user.id)
+        .single();
+      if (!cancelled) {
+        if (error || !profile) {
+          setAuthError('Your account is authenticated, but no active RASS staff profile was found.');
+        } else {
+          setStaff(profile);
+        }
+        setAuthReady(true);
+      }
     })();
     return () => { cancelled = true; };
   }, [routePath, router]);
   if (!ready) return <Loading />;
   if (routePath === '/login' || routePath === '/signup' || routePath === '/forgot-password')
     return <AuthScreen mode={routePath.slice(1)} />;
-  if (!authReady || !staff) return <Loading />;
+  if (!authReady) return <Loading />;
+  if (authError) return <div className="auth-layout"><div className="auth-card"><h2>Account setup incomplete</h2><p>{authError}</p><button className="btn btn-secondary" onClick={async () => { await supabase.auth.signOut(); router.replace('/login'); }}>Sign out</button></div></div>;
+  if (!staff) return <Loading />;
   if (routePath === '/capture') return <CaptureScreen />;
   const kind =
     routePath === '/contacts' ? 'contact' : routePath === '/pipeline' ? 'opportunity' : 'lead';
