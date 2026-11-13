@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { adminDb, requireUser } from "@/lib/supabase/server";
+import { authenticatedDb, requireUser } from "@/lib/supabase/server";
 import { normalizePkPhone, isValidCnic } from "@/lib/clinic";
 
 const patientSchema = z.object({
@@ -36,8 +36,10 @@ function errorResponse(error: unknown) {
 export async function GET(request: NextRequest) {
   try {
     const { profile } = await requireUser(request);
+    const token = request.headers.get("authorization")!.slice(7);
+    const db = authenticatedDb(token);
     const search = request.nextUrl.searchParams.get("search")?.trim() ?? "";
-    let query = adminDb.from("patients").select("*").eq("is_archived", false).order("created_at", { ascending: false }).limit(100);
+    let query = db.from("patients").select("*").eq("is_archived", false).order("created_at", { ascending: false }).limit(100);
     if (search) query = query.or(`full_name.ilike.%${search}%,phone.ilike.%${search}%,mrn.ilike.%${search}%`);
     const { data, error } = await query;
     if (error) throw error;
@@ -52,15 +54,17 @@ export async function POST(request: NextRequest) {
     const parsed = patientSchema.safeParse(await request.json().catch(() => null));
     if (!parsed.success) return NextResponse.json({ code: "VALIDATION_ERROR", message: "Invalid patient details.", issues: parsed.error.issues }, { status: 400 });
     const value = parsed.data;
+    const token = request.headers.get("authorization")!.slice(7);
+    const db = authenticatedDb(token);
     const phone = normalizePkPhone(value.phone);
     const whatsappNumber = value.whatsappNumber ? normalizePkPhone(value.whatsappNumber) : phone;
     const phoneAlt = value.phoneAlt ? normalizePkPhone(value.phoneAlt) : null;
-    const { data: duplicate } = await adminDb.from("patients").select("id, mrn, full_name, phone").eq("phone", phone).eq("is_archived", false).limit(5);
+    const { data: duplicate } = await db.from("patients").select("id, mrn, full_name, phone").eq("phone", phone).eq("is_archived", false).limit(5);
     if (value.cnic) {
-      const { data: cnicMatch } = await adminDb.from("patients").select("id, mrn, full_name, phone").eq("cnic", value.cnic).eq("is_archived", false).limit(1);
+      const { data: cnicMatch } = await db.from("patients").select("id, mrn, full_name, phone").eq("cnic", value.cnic).eq("is_archived", false).limit(1);
       if (cnicMatch?.length) return NextResponse.json({ code: "DUPLICATE_CNIC", message: "A patient with this CNIC already exists.", matches: cnicMatch }, { status: 409 });
     }
-    const { data: patient, error } = await adminDb.from("patients").insert({
+    const { data: patient, error } = await db.from("patients").insert({
       full_name: value.fullName, guardian_name: value.guardianName || null, gender: value.gender ?? null,
       date_of_birth: value.dateOfBirth ?? null, age_years: value.ageYears ?? null, phone, phone_alt: phoneAlt,
       whatsapp_number: whatsappNumber, whatsapp_opt_in: value.whatsappOptIn,
@@ -70,5 +74,20 @@ export async function POST(request: NextRequest) {
     }).select("*").single();
     if (error || !patient) throw error ?? new Error("Patient creation failed");
     return NextResponse.json({ patient, possibleDuplicates: duplicate ?? [] }, { status: 201 });
+  } catch (error) { return errorResponse(error); }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const { profile } = await requireUser(request);
+    if (profile.role !== "receptionist") return NextResponse.json({ code: "FORBIDDEN", message: "Only receptionists can archive patients." }, { status: 403 });
+    const id = request.nextUrl.searchParams.get("id");
+    if (!id) return NextResponse.json({ code: "VALIDATION_ERROR", message: "Patient ID is required." }, { status: 400 });
+    const body = await request.json().catch(() => ({}));
+    if (body.archived !== true) return NextResponse.json({ code: "VALIDATION_ERROR", message: "Only archiving is supported." }, { status: 400 });
+    const token = request.headers.get("authorization")!.slice(7);
+    const { data, error } = await authenticatedDb(token).from("patients").update({ is_archived: true }).eq("id", id).select("id,mrn,full_name,is_archived").single();
+    if (error) throw error;
+    return NextResponse.json({ patient: data });
   } catch (error) { return errorResponse(error); }
 }
