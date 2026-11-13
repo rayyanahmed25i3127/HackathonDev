@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { adminDb, authenticatedDb, requireUser } from "@/lib/supabase/server";
+import { authenticatedDb, requireUser } from "@/lib/supabase/server";
 
 const schema = z.object({
   name: z.string().min(1), address: z.string().min(1), phone: z.string().min(7),
@@ -33,7 +33,9 @@ export async function PATCH(request: NextRequest) {
     const parsed = schema.safeParse(await request.json());
     if (!parsed.success) return NextResponse.json({ code: "VALIDATION_ERROR", details: parsed.error.flatten() }, { status: 400 });
     const v = parsed.data;
-    const { data, error } = await adminDb.from("clinic_settings").update({ name: v.name, address: v.address, phone: v.phone, opening_time: v.openingTime, closing_time: v.closingTime, closed_weekdays: v.closedWeekdays, timezone: v.timezone }).eq("id", true).select("*").single();
+    const token = request.headers.get("authorization")!.slice(7);
+    const db = authenticatedDb(token);
+    const { data, error } = await db.from("clinic_settings").update({ name: v.name, address: v.address, phone: v.phone, opening_time: v.openingTime, closing_time: v.closingTime, closed_weekdays: v.closedWeekdays, timezone: v.timezone }).eq("id", true).select("*").single();
     if (error) throw error;
     return NextResponse.json(data);
   } catch (error) {
