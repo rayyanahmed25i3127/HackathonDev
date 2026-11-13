@@ -31,6 +31,13 @@ const authClient = createClient(url, publishableKey, {
   },
 });
 
+export function authenticatedDb(token: string) {
+  return createClient(url, publishableKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
+
 export async function requireUser(req: NextRequest) {
   assertSupabaseEnv();
   const authorization = req.headers.get("authorization");
@@ -50,10 +57,7 @@ export async function requireUser(req: NextRequest) {
   // Resolve the profile with the same authenticated token. This keeps profile
   // lookup working with Supabase's newer publishable/secret key format and
   // still applies the database RLS policy for the signed-in user.
-  const userDb = createClient(url, publishableKey, {
-    global: { headers: { Authorization: `Bearer ${token}` } },
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  const userDb = authenticatedDb(token);
 
   const { data: profile, error: profileError } = await userDb
     .from("profiles")

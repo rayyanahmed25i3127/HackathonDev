@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { adminDb, requireUser } from "@/lib/supabase/server";
+import { adminDb, authenticatedDb, requireUser } from "@/lib/supabase/server";
 
 const schema = z.object({
   name: z.string().min(1), address: z.string().min(1), phone: z.string().min(7),
@@ -11,10 +11,12 @@ const schema = z.object({
 export async function GET(request: NextRequest) {
   try {
     await requireUser(request);
+    const token = request.headers.get("authorization")!.slice(7);
+    const db = authenticatedDb(token);
     const [settings, doctors, services] = await Promise.all([
-      adminDb.from("clinic_settings").select("*").eq("id", true).single(),
-      adminDb.from("doctors").select("id,display_name,specialty,qualifications,slot_minutes,max_patients_per_day,is_active").eq("is_active", true).order("display_name"),
-      adminDb.from("service_types").select("id,name,specialty,default_minutes,default_fee_paisa,is_active").eq("is_active", true).order("name"),
+      db.from("clinic_settings").select("*").eq("id", true).single(),
+      db.from("doctors").select("id,display_name,specialty,qualifications,slot_minutes,max_patients_per_day,is_active").eq("is_active", true).order("display_name"),
+      db.from("service_types").select("id,name,specialty,default_minutes,default_fee_paisa,is_active").eq("is_active", true).order("name"),
     ]);
     if (settings.error) throw settings.error;
     return NextResponse.json({ settings: settings.data, doctors: doctors.data ?? [], services: services.data ?? [] });
