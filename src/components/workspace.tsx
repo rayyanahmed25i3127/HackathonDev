@@ -185,7 +185,8 @@ function WorkspaceInner() {
         .single();
       if (!cancelled) {
         if (error || !profile) {
-          setAuthError('Your account is authenticated, but no active RASS staff profile was found.');
+          const detail = error ? ` (${error.code ?? 'unknown'}: ${error.message})` : '';
+          setAuthError(`Authenticated as ${auth.session.user.email ?? 'unknown'} (${auth.session.user.id}), but the RASS profile query failed${detail}`);
         } else {
           setStaff(profile);
         }
